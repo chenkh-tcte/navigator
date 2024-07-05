@@ -21,7 +21,7 @@
 	}
 	</style>
 	<script>
-		console.log(new Date());
+		console.log((new Date).toLocaleString());
 		function getWeekNumber(d) {
 			d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
 			d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
@@ -51,7 +51,11 @@
 		}
 		
 		function form_column_value1_onchange() {
-			document.getElementById("form_column_value_result").innerHTML = eval(form1.form_column_value1.value);
+			try {
+				document.getElementById("form_column_value_result").innerHTML = eval(form1.form_column_value1.value);
+			} catch (e) {
+				console.warn((new Date).toLocaleString(), e);
+			}
 		}
 		
 		function body_onload() {
