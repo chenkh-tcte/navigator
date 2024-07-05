@@ -14,9 +14,53 @@
 	</style>
 	<script>
 		console.log(new Date());
+		function getWeekNumber(d) {
+			d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+			d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+			var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+			var weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+			return weekNo;
+		}
+		
+		function do_current_time() {
+			var now = new Date();
+			const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+			const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+			var day = days[ now.getDay() ];
+			var month = months[ now.getMonth() ];		
+			var obj = document.getElementById("current_time");
+			obj.innerHTML = now.toLocaleString()
+				+ "<br />" + "NoME:the number of milliseconds for this date since the epoch, which is defined as the midnight at the beginning of January 1, 1970, UTC."
+				+ "<br />NoME:" + now.getTime()
+				+ "<br />Year:" + now.getFullYear()
+				+ "<br />Month:" + month
+				+ "<br />Days:" + now.getDate()
+				+ "<br />Days of the week:" + day
+				+ "<br />Week Number:" + getWeekNumber(now)
+				;
+			setTimeout(do_current_time, 1);
+		}
+		
+		function form_column_value1_onchange() {
+			document.getElementById("form_column_value_result").innerHTML = eval(form1.form_column_value1.value);
+		}
+		
+		function body_onload() {
+			do_current_time();
+		}
 	</script>
 </head>
-<body>
-<h1>Naviagtor</h1>
+<body onload="body_onload()">
+	<h1>Naviagtor</h1>
+	<h3>
+		<div id="current_time"></div>
+	</h3>
+	<h3>
+		<form name="form1">
+		<textarea name="form_column_value1" onkeyup="form_column_value1_onchange()" cols="55" rows="20"></textarea>		
+		<div id="form_column_value_result"></div>
+		</form>
+	</h3>
 </body>
 </html>
