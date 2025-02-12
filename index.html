@@ -74,5 +74,174 @@
 		<div id="form_column_value_result"></div>
 		</form>
 	</h3>
+
+	
+<div>
+  <button id="camera">Cam</button>
+  <button id="screen">Screen</button>
+  <button id="screenshot">Capture</button>
+  <button id="screenshot-download">Download Capture</button>
+  <button id="video-start">Video</button>
+  <button id="video-download">Download Video</button>
+  <button id="recording-start">Voice</button>
+  <button id="recording-download">Download Voice</button>
+  <button id="stop">Stop</button>
+</div>
+
+<div>
+  <video id="video"></video>
+  <img id="img">
+  <canvas id="canvas" style="display: none;"></canvas>
+</div>
+
+<script>
+let cameraStream
+const camera = document.querySelector('#camera')
+const stop = document.querySelector('#stop')
+const video = document.querySelector('#video')
+
+const constraints = { audio: true, video: true }
+camera.addEventListener('click', () => {
+  navigator.mediaDevices.getUserMedia(constraints).then(stream => {
+    cameraStream = stream
+    video.srcObject = stream
+    video.play()
+  })
+})
+
+stop.addEventListener('click', () => {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(track => {
+      track.stop()
+    })
+    cameraStream = null
+  }
+})
+
+
+let screenStream
+const screen = document.querySelector('#screen')
+
+function stopAllStream () {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(track => {
+      track.stop()
+    })
+    cameraStream = null
+  }
+  if (screenStream) {
+    screenStream.getTracks().forEach(track => {
+      track.stop()
+    })
+    screenStream = null
+  }
+}
+
+camera.addEventListener('click', () => {
+  navigator.mediaDevices.getUserMedia(constraints).then(stream => {
+    stopAllStream()
+    cameraStream = stream
+    video.srcObject = stream
+    video.play()
+  })
+})
+
+screen.addEventListener('click', () => {
+  navigator.mediaDevices.getDisplayMedia(constraints).then(stream => {
+    stopAllStream()
+    screenStream = stream
+    video.srcObject = stream
+    video.play()
+  })
+})
+
+stop.addEventListener('click', stopAllStream)
+
+
+let screenshotBlobUrl
+const screenshot = document.querySelector('#screenshot')
+const screenshotDownload = document.querySelector('#screenshot-download')
+const img = document.querySelector('#img')
+const canvas = document.querySelector('#canvas')
+const ctx = canvas.getContext('2d')
+
+screenshot.addEventListener('click', () => {
+  if (!cameraStream && !screenStream) return
+  const width = video.offsetWidth
+  const height = video.offsetHeight
+  canvas.width = width
+  canvas.height = height
+  ctx.drawImage(video, 0, 0, width, height)
+  canvas.toBlob(blob => {
+    screenshotBlobUrl = window.URL.createObjectURL(blob)
+    img.src = screenshotBlobUrl
+  })
+})
+
+screenshotDownload.addEventListener('click', () => {
+  if (!screenshotBlobUrl) return
+  const downloadLink = document.createElement('a')
+  downloadLink.href = screenshotBlobUrl
+  downloadLink.download = 'fileName'
+  downloadLink.click()
+})
+
+let videoMediaRecorder
+let recordingMediaRecorder
+const videoStart = document.querySelector('#video-start')
+const videoDownload = document.querySelector('#video-download')
+const recordingStart = document.querySelector('#recording-start')
+const recordingDownload = document.querySelector('#recording-download')
+
+videoStart.addEventListener('click', () => {
+  if (!cameraStream && !screenStream) return
+  const currentStream = cameraStream || screenStream
+  const options = {
+    audioBitsPerSecond: 128000,
+    videoBitsPerSecond: 2500000,
+    mimeType: 'video/webm'
+  }
+  const mediaRecorder = new MediaRecorder(currentStream, options)
+  videoMediaRecorder = mediaRecorder
+  mediaRecorder.addEventListener('dataavailable', e => {
+    const blob = new Blob([e.data], { type: 'video/mp4' })
+    const downloadLink = document.createElement('a')
+    downloadLink.href = window.URL.createObjectURL(blob)
+    downloadLink.download = 'videoName'
+    downloadLink.click()
+  })
+  mediaRecorder.start()
+})
+
+videoDownload.addEventListener('click', () => {
+  if (!videoMediaRecorder) return
+  videoMediaRecorder.stop()
+})
+
+recordingStart.addEventListener('click', () => {
+  if (!cameraStream && !screenStream) return
+  const currentStream = cameraStream || screenStream
+  const options = {
+    audioBitsPerSecond: 128000,
+    mimeType: 'audio/webm'
+  }
+  const mediaRecorder = new MediaRecorder(currentStream, options)
+  recordingMediaRecorder = mediaRecorder
+  mediaRecorder.addEventListener('dataavailable', e => {
+    const blob = new Blob([e.data], { type: 'audio/mp4' })
+    const downloadLink = document.createElement('a')
+    downloadLink.href = window.URL.createObjectURL(blob)
+    downloadLink.download = 'recordingName'
+    downloadLink.click()
+  })
+  mediaRecorder.start()
+})
+
+recordingDownload.addEventListener('click', () => {
+  if (!recordingMediaRecorder) return
+  recordingMediaRecorder.stop()
+})
+</script>
+	
 </body>
 </html>
